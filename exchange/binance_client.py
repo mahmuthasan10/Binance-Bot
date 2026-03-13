@@ -123,6 +123,51 @@ class BinanceClient:
             logger.error(f"{symbol} sembol bilgisi alınamadı: {e}")
             raise
 
+    def get_order_book_imbalance(self, symbol: str, limit: int = 100) -> float:
+        """Emir defterindeki alıcı/satıcı baskısını yüzde olarak hesaplar.
+
+        Tahtadaki bids (alış) ve asks (satış) hacimlerini toplayarak
+        alıcı baskısı oranını döndürür.
+
+        Args:
+            symbol: İşlem çifti (ör. 'BTCUSDT').
+            limit: Çekilecek emir derinliği (varsayılan 100).
+
+        Returns:
+            Alıcı baskısı yüzdesi (0-100). Örn: 55.4 → alıcılar baskın.
+            Hata durumunda 50.0 (nötr) döner.
+        """
+        try:
+            order_book: dict = self.client.get_order_book(symbol=symbol, limit=limit)
+
+            bids: list = order_book.get("bids", [])
+            asks: list = order_book.get("asks", [])
+
+            # Her satır [Fiyat, Miktar] şeklinde string olarak gelir
+            total_bids_volume: float = sum(float(bid[1]) for bid in bids)
+            total_asks_volume: float = sum(float(ask[1]) for ask in asks)
+
+            total_volume: float = total_bids_volume + total_asks_volume
+
+            if total_volume == 0:
+                logger.warning(f"{symbol} emir defteri boş, nötr (50.0) döndürülüyor.")
+                return 50.0
+
+            imbalance: float = (total_bids_volume / total_volume) * 100
+
+            logger.info(
+                f"{symbol} Emir Defteri → Alış hacmi: {total_bids_volume:.4f}, "
+                f"Satış hacmi: {total_asks_volume:.4f}, Alıcı baskısı: %{imbalance:.1f}"
+            )
+            return imbalance
+
+        except BinanceAPIException as e:
+            logger.error(f"Order Book API hatası ({symbol}): {e}")
+            return 50.0
+        except Exception as e:
+            logger.error(f"Order Book beklenmeyen hata ({symbol}): {e}")
+            return 50.0
+
     def create_market_order(
         self, symbol: str, side: str, quantity: float
     ) -> Optional[dict]:

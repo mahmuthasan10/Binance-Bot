@@ -9,6 +9,7 @@ Kullanım:
     df = get_historical_data("BTCUSDT", "1d", "1 month ago UTC")
 """
 
+import requests
 import pandas as pd
 from binance.client import Client
 from binance.exceptions import BinanceAPIException
@@ -85,7 +86,7 @@ def get_live_data(
     client: Client,
     symbol: str = "BTCUSDT",
     interval: str = "1h",
-    limit: int = 100,
+    limit: int = 250,
 ) -> pd.DataFrame:
     """Binance'den son N mumu (anlık/canlı) çeker ve temizler.
 
@@ -131,3 +132,43 @@ def get_live_data(
     except Exception as e:
         logger.error(f"Beklenmeyen hata (canlı veri - {symbol}): {e}")
         return pd.DataFrame(columns=KEEP_COLUMNS)
+
+
+# Fear & Greed Index API URL
+FEAR_GREED_URL: str = "https://api.alternative.me/fng/"
+
+
+def get_fear_and_greed_index() -> dict:
+    """Alternative.me API'den güncel Korku ve Açgözlülük endeksini çeker.
+
+    Returns:
+        {"value": int, "classification": str} formatında sözlük.
+        Örn: {"value": 45, "classification": "Fear"}.
+        Hata durumunda nötr değer döner: {"value": 50, "classification": "Neutral"}.
+    """
+    neutral: dict = {"value": 50, "classification": "Neutral"}
+
+    try:
+        response = requests.get(FEAR_GREED_URL, timeout=10)
+        response.raise_for_status()
+
+        data: dict = response.json()
+        fng_data: list = data.get("data", [])
+
+        if not fng_data:
+            logger.warning("Fear & Greed API'den veri gelmedi, nötr döndürülüyor.")
+            return neutral
+
+        latest: dict = fng_data[0]
+        value: int = int(latest.get("value", 50))
+        classification: str = latest.get("value_classification", "Neutral")
+
+        logger.info(f"Fear & Greed Index → {value} ({classification})")
+        return {"value": value, "classification": classification}
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Fear & Greed API hatası: {e}")
+        return neutral
+    except Exception as e:
+        logger.error(f"Fear & Greed beklenmeyen hata: {e}")
+        return neutral

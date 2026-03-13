@@ -33,11 +33,10 @@
 - [ ] Sistemin kendi bilgisayarımızda 1 hafta boyunca Testnet parasıyla kendi kendine çalışmaya bırakılması.
 
 ## Faz 5: "Confluence" (Çoklu Onay) Zeka Katmanı
-- [ ] **5.1 - İleri Teknik Analiz:** `indicator.py` güncellenerek EMA_200, MACD ve ATR indikatörlerinin sisteme eklenmesi. `data_fetcher.py` limitinin EMA_200'ü besleyecek şekilde (min 250 mum) artırılması.
-- [ ] **5.2 - Derinlik (Order Book) Analizi:** `binance_client.py` içine anlık Tahta (Order Book) verisini çekip Alıcı/Satıcı baskısını (Imbalance) hesaplayan metodun eklenmesi.
-- [ ] **5.3 - Duygu (Sentiment) Analizi:** Ücretsiz bir API'den (Örn: Alternative.me) Korku ve Açgözlülük (Fear & Greed) endeksinin çekilmesi.
-- [ ] **5.4 - Hibrit Karar Motoru (Refactoring):** `main.py` içindeki Live Loop'un sadece RSI'a göre değil; Trend (EMA), Momentum (MACD), Derinlik ve Duygu onaylarının Hepsinden "Geçer" notu aldığında işlem yapacak şekilde baştan yazılması.
+- [x] **5.1 - İleri Teknik Analiz:** `indicator.py` güncellenerek EMA_200, MACD ve ATR indikatörlerinin eklenmesi. `data_fetcher.py` limitinin 250 muma çıkarılması.
+- [x] **5.2 - Derinlik (Order Book) Analizi:** Anlık Tahta (Order Book) verisini çekip Alıcı/Satıcı baskısını hesaplayan metodun eklenmesi.
+- [x] **5.3 - Duygu (Sentiment) Analizi:** Korku ve Açgözlülük endeksinin çekilmesi.
+- [x] **5.4 - Hibrit Karar Motoru:** Ana döngünün tüm bu metriklerden onay alarak (Confluence) işleme girecek şekilde baştan yazılması.
 
 ## Faz 6: Bulut ve Kesintisiz Çalışma (Deployment)
-- [ ] Kodların GitHub'a (.env hariç) push edilmesi.
-- [ ] Ücretsiz bir Linux VPS'e (Google Cloud/Koyeb) sistemin taşınması ve 7/24 canlıya alınması.
+- [ ] Kodların GitHub'a push edilmesi ve ücretsiz bir VPS'te canlıya alınması.
