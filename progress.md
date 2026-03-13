@@ -29,10 +29,15 @@
 ## Faz 4: Risk Yönetimi ve Paper Trading (Sanal Ticaret)
 - [ ] Hard-coded Zarar Kes (Stop-Loss) modülünün sisteme entegre edilmesi (Örn: Pozisyon %2 eksiye düşerse anında sat).
 - [ ] Kâr Al (Take-Profit) mekanizmasının eklenmesi.
-- [ ] Botun `main.py` üzerinden 7/24 döngüde (while loop veya scheduler ile) çalışacak hale getirilmesi.
+- [x] Botun `main.py` üzerinden 7/24 döngüde (while loop veya scheduler ile) çalışacak hale getirilmesi.
 - [ ] Sistemin kendi bilgisayarımızda 1 hafta boyunca Testnet parasıyla kendi kendine çalışmaya bırakılması.
 
-## Faz 5: Bulut ve Gerçek Para (Gelecek Planı)
-- [ ] Ortamın canlı (Real) API anahtarlarıyla güncellenmesi.
+## Faz 5: "Confluence" (Çoklu Onay) Zeka Katmanı
+- [ ] **5.1 - İleri Teknik Analiz:** `indicator.py` güncellenerek EMA_200, MACD ve ATR indikatörlerinin sisteme eklenmesi. `data_fetcher.py` limitinin EMA_200'ü besleyecek şekilde (min 250 mum) artırılması.
+- [ ] **5.2 - Derinlik (Order Book) Analizi:** `binance_client.py` içine anlık Tahta (Order Book) verisini çekip Alıcı/Satıcı baskısını (Imbalance) hesaplayan metodun eklenmesi.
+- [ ] **5.3 - Duygu (Sentiment) Analizi:** Ücretsiz bir API'den (Örn: Alternative.me) Korku ve Açgözlülük (Fear & Greed) endeksinin çekilmesi.
+- [ ] **5.4 - Hibrit Karar Motoru (Refactoring):** `main.py` içindeki Live Loop'un sadece RSI'a göre değil; Trend (EMA), Momentum (MACD), Derinlik ve Duygu onaylarının Hepsinden "Geçer" notu aldığında işlem yapacak şekilde baştan yazılması.
+
+## Faz 6: Bulut ve Kesintisiz Çalışma (Deployment)
 - [ ] Kodların GitHub'a (.env hariç) push edilmesi.
-- [ ] Ücretsiz/Uygun maliyetli bir Linux VPS'e (Google Cloud/Koyeb) sistemin taşınması ve `systemd` ile arka planda kesintisiz çalıştırılması.
+- [ ] Ücretsiz bir Linux VPS'e (Google Cloud/Koyeb) sistemin taşınması ve 7/24 canlıya alınması.
