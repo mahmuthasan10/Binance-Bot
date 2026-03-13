@@ -1,0 +1,19 @@
+# Ortam degiskenleri (hassas veriler)
+.env
+
+# Sanal ortam
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Veritabani
+*.db
+
+# Log dosyalari
+*.log
+
+# IDE
+.vscode/
+.idea/

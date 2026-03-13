@@ -7,13 +7,13 @@
 - [x] `claude.md` ve `progress.md` dosyalarının detaylandırılarak eklenmesi.
 
 ## Faz 1: "Data Miner" - Tarihsel Veri Çekimi ve Depolama (Mevcut Aşama)
-- [ ] Proje klasör yapısının (core, exchange, data vb.) oluşturulması.
-- [ ] `requirements.txt` dosyasının oluşturulup gerekli kütüphanelerin kurulması.
-- [ ] `.env.example` ve `.env` dosyalarının şablonlarının oluşturulması.
-- [ ] `logger.py`: Sistemin yaptığı her işlemi `bot.log` dosyasına ve terminale yazdıracak modülün kodlanması.
-- [ ] `binance_client.py`: Binance API'ye (Testnet ayarı dahil) güvenli bağlanan ve cüzdan bakiyesini döndüren sınıfın yazılması.
-- [ ] `data_fetcher.py`: Belirli bir coin (Örn: BTC/USDT) için geçmiş mum (OHLCV) verilerini çeken ve bunu `pandas` DataFrame formatına çeviren modülün yazılması.
-- [ ] Veritabanı Modülü: Çekilen geçmiş verileri lokalde bir `SQLite` veritabanına kaydedecek yapının kurulması.
+- [x] Proje klasör yapısının (core, exchange, data vb.) oluşturulması.
+- [x] `requirements.txt` dosyasının oluşturulup gerekli kütüphanelerin kurulması.
+- [x] `.env.example` ve `.env` dosyalarının şablonlarının oluşturulması.
+- [x] `logger.py`: Sistemin yaptığı her işlemi `bot.log` dosyasına ve terminale yazdıracak modülün kodlanması.
+- [x] `binance_client.py`: Binance API'ye (Testnet ayarı dahil) güvenli bağlanan ve cüzdan bakiyesini döndüren sınıfın yazılması.
+- [x] `data_fetcher.py`: Belirli bir coin (Örn: BTC/USDT) için geçmiş mum (OHLCV) verilerini çeken ve bunu `pandas` DataFrame formatına çeviren modülün yazılması.
+- [x] Veritabanı Modülü: Çekilen geçmiş verileri lokalde bir `SQLite` veritabanına kaydedecek yapının kurulması.
 
 ## Faz 2: "Lab" - Backtest Motoru ve İndikatörler
 - [ ] `strategy.py`: `pandas-ta` kullanılarak RSI (14) ve SMA (50) indikatörlerini DataFrame'e ekleyen fonksiyonun yazılması.
