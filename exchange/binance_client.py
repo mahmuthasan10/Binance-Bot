@@ -9,6 +9,7 @@ Kullanım:
     balances = client.get_account_balance()
 """
 
+import math
 import os
 from typing import Optional
 
@@ -88,3 +89,91 @@ class BinanceClient:
         except BinanceAPIException as e:
             logger.error(f"Bakiye bilgisi alınamadı: {e}")
             return []
+
+    def get_symbol_precision(self, symbol: str) -> int:
+        """Bir sembolün LOT_SIZE stepSize bilgisinden emir hassasiyetini (ondalık basamak) döndürür.
+
+        Örnek: stepSize='0.00100000' → precision=3
+
+        Args:
+            symbol: İşlem çifti (ör. 'BTCUSDT').
+
+        Returns:
+            Miktarın yuvarlanması gereken ondalık basamak sayısı.
+
+        Raises:
+            ValueError: Sembol bilgisi veya LOT_SIZE filtresi bulunamazsa.
+        """
+        try:
+            info = self.client.get_symbol_info(symbol)
+            if info is None:
+                raise ValueError(f"{symbol} sembol bilgisi Binance'den alınamadı.")
+
+            for f in info["filters"]:
+                if f["filterType"] == "LOT_SIZE":
+                    step_size = f["stepSize"]
+                    # stepSize'ı ondalık basamak sayısına çevir
+                    # Örn: '0.00100000' → 3, '0.01000000' → 2
+                    precision = int(round(-math.log10(float(step_size)), 0))
+                    logger.info(f"{symbol} LOT_SIZE stepSize={step_size}, precision={precision}")
+                    return precision
+
+            raise ValueError(f"{symbol} için LOT_SIZE filtresi bulunamadı.")
+        except BinanceAPIException as e:
+            logger.error(f"{symbol} sembol bilgisi alınamadı: {e}")
+            raise
+
+    def create_market_order(
+        self, symbol: str, side: str, quantity: float
+    ) -> Optional[dict]:
+        """Piyasa emri (MARKET order) gönderir.
+
+        Miktar, sembolün LOT_SIZE hassasiyetine göre aşağıya yuvarlanır (floor).
+        Bakiye yetersizliği veya API hatası durumunda None döndürür.
+
+        Args:
+            symbol: İşlem çifti (ör. 'BTCUSDT').
+            side: 'BUY' veya 'SELL'.
+            quantity: Ham miktar (yuvarlanmadan önce).
+
+        Returns:
+            Başarılıysa Binance API'nin emir yanıtı (dict), başarısızsa None.
+        """
+        try:
+            precision = self.get_symbol_precision(symbol)
+
+            # Aşağıya doğru yuvarla (floor)
+            factor = 10 ** precision
+            rounded_qty = math.floor(quantity * factor) / factor
+
+            if rounded_qty <= 0:
+                logger.error(
+                    f"Yuvarlanmış miktar 0 veya negatif: {quantity} → {rounded_qty} "
+                    f"(precision={precision}). Emir gönderilmedi."
+                )
+                return None
+
+            logger.info(
+                f"MARKET {side} emri gönderiliyor: {symbol} | "
+                f"Ham miktar: {quantity}, Yuvarlanmış: {rounded_qty}"
+            )
+
+            order = self.client.create_order(
+                symbol=symbol,
+                side=side,
+                type="MARKET",
+                quantity=rounded_qty,
+            )
+
+            logger.info(f"Emir başarıyla gönderildi! Yanıt: {order}")
+            return order
+
+        except BinanceAPIException as e:
+            logger.error(f"MARKET {side} emri başarısız ({symbol}): {e}")
+            return None
+        except ValueError as e:
+            logger.error(f"Precision hesaplama hatası: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Beklenmeyen hata (create_market_order): {e}")
+            return None

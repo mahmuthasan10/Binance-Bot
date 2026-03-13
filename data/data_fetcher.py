@@ -79,3 +79,55 @@ def get_historical_data(
     except Exception as e:
         logger.error(f"Beklenmeyen hata ({symbol}): {e}")
         return pd.DataFrame(columns=KEEP_COLUMNS)
+
+
+def get_live_data(
+    client: Client,
+    symbol: str = "BTCUSDT",
+    interval: str = "1h",
+    limit: int = 100,
+) -> pd.DataFrame:
+    """Binance'den son N mumu (anlık/canlı) çeker ve temizler.
+
+    get_historical_data'dan farkı: lookback yerine sabit limit kullanır,
+    böylece canlı döngüde her çağrıda sadece son mumları alır.
+
+    Args:
+        client: python-binance Client nesnesi.
+        symbol: İşlem çifti (Örn: 'BTCUSDT').
+        interval: Mum aralığı (Örn: '15m', '1h', '1d').
+        limit: Çekilecek mum sayısı (varsayılan 100).
+
+    Returns:
+        Temizlenmiş DataFrame (timestamp, open, high, low, close, volume).
+        Hata durumunda boş DataFrame döner.
+    """
+    try:
+        logger.info(f"{symbol} için son {limit} adet {interval} mum çekiliyor...")
+
+        raw_klines: list = client.get_klines(
+            symbol=symbol, interval=interval, limit=limit
+        )
+
+        if not raw_klines:
+            logger.warning(f"{symbol} için canlı veri bulunamadı.")
+            return pd.DataFrame(columns=KEEP_COLUMNS)
+
+        df = pd.DataFrame(raw_klines, columns=RAW_COLUMNS)
+
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+
+        for col in NUMERIC_COLUMNS:
+            df[col] = df[col].astype(float)
+
+        df = df[KEEP_COLUMNS]
+
+        logger.info(f"{symbol}: {len(df)} adet canlı mum verisi alındı.")
+        return df
+
+    except BinanceAPIException as e:
+        logger.error(f"Binance API hatası (canlı veri - {symbol}): {e}")
+        return pd.DataFrame(columns=KEEP_COLUMNS)
+    except Exception as e:
+        logger.error(f"Beklenmeyen hata (canlı veri - {symbol}): {e}")
+        return pd.DataFrame(columns=KEEP_COLUMNS)

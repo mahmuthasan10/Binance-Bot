@@ -22,9 +22,9 @@
 - [x] Strateji parametrelerinin Grid Search ile optimize edilerek en kârlı RSI kombinasyonunun bulunması.
 
 ## Faz 3: "Live Pulse" - Canlı Testnet Akışı
-- [ ] Botun, geçmiş veriler yerine Binance API'den anlık (live) veya periyodik (örneğin her 15 dakikada bir) güncel mum verisini çekecek şekilde güncellenmesi.
-- [ ] Yeni gelen mum verisine göre indikatörlerin anlık hesaplanması.
-- [ ] Sinyal (Al/Sat) oluştuğunda Testnet üzerinde ilk sanal piyasa (Market) emrinin gönderilmesi.
+- [x] Botun, geçmiş veriler yerine Binance API'den anlık (live) veya periyodik (örneğin her 15 dakikada bir) güncel mum verisini çekecek şekilde güncellenmesi.
+- [x] Yeni gelen mum verisine göre indikatörlerin anlık hesaplanması.
+- [x] Sinyal (Al/Sat) oluştuğunda Testnet üzerinde ilk sanal piyasa (Market) emrinin gönderilmesi.
 
 ## Faz 4: Risk Yönetimi ve Paper Trading (Sanal Ticaret)
 - [ ] Hard-coded Zarar Kes (Stop-Loss) modülünün sisteme entegre edilmesi (Örn: Pozisyon %2 eksiye düşerse anında sat).

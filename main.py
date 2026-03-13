@@ -1,57 +1,88 @@
 """
-Ana giriş noktası - Geliştirme aşamasında test amaçlı kullanılır.
+Faz 3 - Canlı Veri + İndikatör + Sinyal Testi.
+
+Binance'den son 100 saatlik mumu çeker, RSI/SMA hesaplar,
+kapanmış son muma göre sinyal olup olmadığını raporlar.
 """
 
 from core.logger import setup_logger
-from core.database import init_db, load_market_data
 from exchange.binance_client import BinanceClient
-from data.data_fetcher import get_historical_data
+from data.data_fetcher import get_live_data
 from strategy.indicator import add_indicators
-from strategy.backtest import run_backtest, print_report, optimize_rsi_parameters
 
 logger = setup_logger("main")
 
 SYMBOL = "BTCUSDT"
+INTERVAL = "1h"
+
+# Faz 2'de optimize edilmiş RSI eşikleri
+RSI_LOW = 25
+RSI_HIGH = 80
 
 
 def main() -> None:
-    # 1) Veritabanını hazırla
-    init_db()
-
-    # 2) Saatlik OHLCV verisini API'den çek
+    # 1) Binance bağlantısını kur
     client = BinanceClient()
-    df = get_historical_data(
+
+    if not client.test_connection():
+        logger.error("Binance bağlantısı kurulamadı, çıkılıyor.")
+        return
+
+    # 2) Son 100 saatlik mumu çek
+    df = get_live_data(
         client=client.client,
         symbol=SYMBOL,
-        interval="1h",
-        lookback="1 month ago UTC",
+        interval=INTERVAL,
+        limit=100,
     )
 
     if df.empty:
-        logger.warning("Veri çekilemedi, işlem durduruluyor.")
+        logger.warning("Canlı veri çekilemedi, işlem durduruluyor.")
         return
 
-    print(f"\n=== API'den Çekilen Ham Veri ({len(df)} mum) ===")
+    print(f"\n=== Çekilen Canlı Veri: {len(df)} mum ({SYMBOL} / {INTERVAL}) ===")
 
-    # 3) Teknik indikatörleri ekle
+    # 3) İndikatörleri hesapla
     df = add_indicators(df)
 
     if df.empty:
         logger.warning("İndikatör sonrası veri kalmadı (yetersiz mum sayısı).")
         return
 
-    # 4) RSI parametrelerini optimize et
-    best = optimize_rsi_parameters(df)
+    # 4) Kapanmış son mumu baz al (iloc[-2]: son kapanmış, iloc[-1]: henüz açık)
+    last_closed = df.iloc[-2]
 
-    # 5) En iyi parametrelerle detaylı backtest raporu
-    print(f"\n>>> En iyi parametrelerle backtest: "
-          f"RSI_low={best['best_rsi_low']}, RSI_high={best['best_rsi_high']}")
-    best_metrics = run_backtest(
-        df, initial_balance=100.0,
-        rsi_low=best["best_rsi_low"],
-        rsi_high=best["best_rsi_high"],
-    )
-    print_report(best_metrics)
+    close_price = last_closed["close"]
+    sma_50 = last_closed["SMA_50"]
+    rsi_14 = last_closed["RSI_14"]
+    timestamp = last_closed["timestamp"]
+
+    print(f"\n{'='*55}")
+    print(f"  Son Kapanmış Mum : {timestamp}")
+    print(f"  Kapanış Fiyatı   : {close_price:,.2f} USDT")
+    print(f"  SMA_50           : {sma_50:,.2f} USDT")
+    print(f"  RSI_14           : {rsi_14:.2f}")
+    print(f"{'='*55}")
+
+    # 5) Sinyal kontrolü (optimize edilmiş eşikler)
+    print(f"\n  Strateji Eşikleri: RSI < {RSI_LOW} → AL | RSI > {RSI_HIGH} → SAT")
+    print(f"  {'-'*50}")
+
+    if rsi_14 < RSI_LOW:
+        signal = "AL (BUY)"
+        print(f"  >>> SİNYAL: {signal}")
+        print(f"      RSI ({rsi_14:.2f}) < {RSI_LOW} → Aşırı satım bölgesi!")
+    elif rsi_14 > RSI_HIGH:
+        signal = "SAT (SELL)"
+        print(f"  >>> SİNYAL: {signal}")
+        print(f"      RSI ({rsi_14:.2f}) > {RSI_HIGH} → Aşırı alım bölgesi!")
+    else:
+        signal = "BEKLE (HOLD)"
+        print(f"  >>> SİNYAL: {signal}")
+        print(f"      RSI ({rsi_14:.2f}) nötr bölgede, emir yok.")
+
+    print(f"{'='*55}\n")
+    logger.info(f"Sinyal sonucu: {signal} | RSI={rsi_14:.2f}, Close={close_price:.2f}")
 
 
 if __name__ == "__main__":
