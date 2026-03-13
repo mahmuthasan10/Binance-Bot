@@ -16,10 +16,10 @@
 - [x] Veritabanı Modülü: Çekilen geçmiş verileri lokalde bir `SQLite` veritabanına kaydedecek yapının kurulması.
 
 ## Faz 2: "Lab" - Backtest Motoru ve İndikatörler
-- [ ] `strategy.py`: `pandas-ta` kullanılarak RSI (14) ve SMA (50) indikatörlerini DataFrame'e ekleyen fonksiyonun yazılması.
-- [ ] `backtest.py`: Geçmiş veriler üzerinde çalışan bir simülasyon motoru yazılması. (Örn: RSI 30'un altındaysa al, 70'in üstündeyse sat).
-- [ ] Backtest sonuçlarının (Kâr/Zarar, Toplam İşlem, Kazanma Oranı, Max Drawdown) terminale raporlanması.
-- [ ] Strateji parametrelerinin optimize edilerek kârlı bir sonucun bulunması.
+- [x] `strategy/indicator.py`: `pandas-ta` kullanılarak RSI (14) ve SMA (50) indikatörlerini DataFrame'e ekleyen fonksiyonun yazılması.
+- [x] `strategy/backtest.py`: Geçmiş veriler üzerinde çalışan bir simülasyon motoru yazılması. (RSI < 30 → AL, RSI > 70 → SAT, %0.1 komisyon dahil).
+- [x] Backtest sonuçlarının (Kâr/Zarar, Toplam İşlem, Kazanma Oranı) terminale raporlanması.
+- [x] Strateji parametrelerinin Grid Search ile optimize edilerek en kârlı RSI kombinasyonunun bulunması.
 
 ## Faz 3: "Live Pulse" - Canlı Testnet Akışı
 - [ ] Botun, geçmiş veriler yerine Binance API'den anlık (live) veya periyodik (örneğin her 15 dakikada bir) güncel mum verisini çekecek şekilde güncellenmesi.

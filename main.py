@@ -3,9 +3,11 @@ Ana giriş noktası - Geliştirme aşamasında test amaçlı kullanılır.
 """
 
 from core.logger import setup_logger
-from core.database import init_db, save_market_data, load_market_data
+from core.database import init_db, load_market_data
 from exchange.binance_client import BinanceClient
 from data.data_fetcher import get_historical_data
+from strategy.indicator import add_indicators
+from strategy.backtest import run_backtest, print_report, optimize_rsi_parameters
 
 logger = setup_logger("main")
 
@@ -13,42 +15,43 @@ SYMBOL = "BTCUSDT"
 
 
 def main() -> None:
-    # 1) Veritabanini hazirla
+    # 1) Veritabanını hazırla
     init_db()
 
-    # 2) Binance'e baglan
+    # 2) Saatlik OHLCV verisini API'den çek
     client = BinanceClient()
-    client.test_connection()
-
-    # 3) OHLCV verilerini cek
     df = get_historical_data(
         client=client.client,
         symbol=SYMBOL,
-        interval="1d",
+        interval="1h",
         lookback="1 month ago UTC",
     )
 
     if df.empty:
-        logger.warning("Veri cekilemedi, islem durduruluyor.")
+        logger.warning("Veri çekilemedi, işlem durduruluyor.")
         return
 
-    print(f"\n=== API'den Cekilen Veri ({len(df)} mum) ===")
-    print(df.head().to_string(index=False))
+    print(f"\n=== API'den Çekilen Ham Veri ({len(df)} mum) ===")
 
-    # 4) Veritabanina kaydet
-    new_rows = save_market_data(df, SYMBOL)
-    print(f"\nYeni eklenen satir: {new_rows}")
+    # 3) Teknik indikatörleri ekle
+    df = add_indicators(df)
 
-    # 5) Veritabanindan geri oku (dogrulama)
-    df_loaded = load_market_data(SYMBOL)
-    print(f"\n=== Veritabanindan Okunan Veri ({len(df_loaded)} mum) ===")
-    print(f"Veri tipleri:\n{df_loaded.dtypes}\n")
-    print(df_loaded.head().to_string(index=False))
+    if df.empty:
+        logger.warning("İndikatör sonrası veri kalmadı (yetersiz mum sayısı).")
+        return
 
-    # 6) Duplicate testi: ayni veriyi tekrar kaydet
-    print("\n=== Duplicate Testi (ayni veri tekrar kaydediliyor) ===")
-    dup_rows = save_market_data(df, SYMBOL)
-    print(f"Tekrar eklenen satir: {dup_rows} (0 olmali)")
+    # 4) RSI parametrelerini optimize et
+    best = optimize_rsi_parameters(df)
+
+    # 5) En iyi parametrelerle detaylı backtest raporu
+    print(f"\n>>> En iyi parametrelerle backtest: "
+          f"RSI_low={best['best_rsi_low']}, RSI_high={best['best_rsi_high']}")
+    best_metrics = run_backtest(
+        df, initial_balance=100.0,
+        rsi_low=best["best_rsi_low"],
+        rsi_high=best["best_rsi_high"],
+    )
+    print_report(best_metrics)
 
 
 if __name__ == "__main__":
