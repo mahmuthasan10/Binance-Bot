@@ -7,6 +7,11 @@ Trend, Momentum, Derinlik ve Duygu onaylarının hepsinden
 """
 
 import time
+import os
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+import time
 
 from core.logger import setup_logger
 from exchange.binance_client import BinanceClient
@@ -20,6 +25,26 @@ INTERVAL = "1h"
 
 # Döngü bekleme süresi (saniye)
 SLEEP_SECONDS = 60
+
+
+
+# --- TRUVA ATI: BULUT SAĞLAYICIYI KANDIRAN SAHTE SUNUCU ---
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/plain')
+        self.end_headers()
+        self.wfile.write(b"Bot is running!")
+    
+    # Log kirliliğini önlemek için HTTP loglarını kapatıyoruz
+    def log_message(self, format, *args):
+        pass
+
+def start_dummy_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    server.serve_forever()
+
 
 
 def run_live_bot() -> None:
@@ -47,6 +72,10 @@ def run_live_bot() -> None:
         f"İşlem tutarı: {trade_amount_usdt} USDT"
     )
 
+# Sahte sunucuyu arka plan (daemon) iş parçacığı olarak başlat
+    threading.Thread(target=start_dummy_server, daemon=True).start()
+    logger.info("Truva Atı (Health Check Sunucusu) başlatıldı.")
+    
     # ── Ana döngü ──
     while True:
         try:
